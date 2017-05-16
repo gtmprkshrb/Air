@@ -1,7 +1,9 @@
-#include <DHT.h>
+//All Libraries required here are included in the GitHub folder download. Put All ".cpp" and ".h" files in My Computer > Documents > Arduino > Libraries
+ 
+#include <Wire.h>  // This library is already present in Arduino IDE
+#include <DHT.h> //
 #include <ESP8266WiFi.h>
-#include <Wire.h>  // This library is already built in to the Arduino IDE
-#include <LiquidCrystal_I2C.h> // LCD library
+#include <LiquidCrystal_I2C.h> 
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
 
 int measurePin = A0;
@@ -15,11 +17,11 @@ float voMeasured=0.0;
 float calcVoltage=0.0;
 float dustDensity=0.0;
 
-String apiKey = "QHNVQBGOOA0SZ22V";
-const char* ssid = "CEPT_STUDENT";
-const char* password = "";
-const char* server = "139.59.43.105"; //changed from api.thingspeak.com
-#define DHTPIN D5 // SO CONNECT THE DHT11/22 SENSOR TO PIN D6 OF THE NODEMCU
+String apiKey = "SE33A3I8EMGV0QWC";
+const char* ssid = "ReapBenefit_Act_Upstairs";
+const char* password = "solvesmalldentbig";
+const char* server = "139.59.43.105";
+#define DHTPIN D4 // SO CHANGE THE DHT11/22 SENSOR TO THIS PIN OF THE NODEMCU
 
 DHT dht(DHTPIN, DHT22,15); //CHANGE DHT11 TO DHT22 IF YOU ARE USING DHT22
 WiFiClient client;
@@ -40,7 +42,8 @@ void setup() {
     Serial.println(ssid);
     
     WiFi.begin(ssid, password);
-    
+    delay(3000);
+    WiFi.mode(WIFI_STA);
     while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -50,7 +53,7 @@ void setup() {
 }
 
 void loop() {
-
+  delay(15000);
 
   digitalWrite(ledPower, LOW); // power on the LED
   delayMicroseconds(samplingTime);
@@ -99,7 +102,7 @@ void loop() {
       //lcd.print(h);
       //lcd.print(" %");
       lcd.setCursor(0, 1);
-      lcd.print("Dust PM2.5 ");
+      lcd.print("Dust PM2.5: ");
       lcd.print(dustDensity);
       //lcd.print(" mg/m3");
       Serial.println("% send to Thingspeak");
@@ -111,19 +114,18 @@ void loop() {
       }
       
       if (client.connect(server,3000)) { // "184.106.153.149" or api.thingspeak.com
+      
       String postStr = apiKey;
-
-      postStr +="&field3=";
+      postStr +="&field1=";
       postStr += String(t);
-      postStr +="&field4=";
+      postStr +="&field2=";
       postStr += String(h);
-      /*postStr +="&field3=";
-      postStr += String(h);*/
+      postStr +="&field3=";
+      postStr += String(dustDensity);
       postStr += "\r\n\r\n";
       
       client.print("POST /update HTTP/1.1\n");
-      //client.print("Host: api.thingspeak.com\n");
-client.print("Host: http://139.59.43.105:3000/update\n");
+      client.print("Host: api.thingspeak.com\n");
       client.print("Connection: close\n");
       client.print("X-THINGSPEAKAPIKEY: "+apiKey+"\n");
       client.print("Content-Type: application/x-www-form-urlencoded\n");
@@ -132,13 +134,13 @@ client.print("Host: http://139.59.43.105:3000/update\n");
       client.print("\n\n");
       client.print(postStr);
       
-      delay(5000);
+      
       }
       client.stop();
       
       Serial.println("Waiting…");
       // thingspeak needs minimum 15 sec delay between updates
-      //delay(150000);
+      //delay(300000);
 
 }
 
@@ -154,4 +156,3 @@ float sumUp(float * n, int samples) {
   float r = res / samples;
   return r;
 }
-
